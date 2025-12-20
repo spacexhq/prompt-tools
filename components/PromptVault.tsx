@@ -69,12 +69,12 @@ const PromptVault: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-950 uppercase tracking-tight">Vault</h1>
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Knowledge Base Index</p>
+          <h1 className="text-2xl font-bold text-slate-950 dark:text-white uppercase tracking-tight">Vault</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Knowledge Base Index</p>
         </div>
         <button 
           onClick={() => { setEditingPrompt(null); setFormData({ title: '', description: '', category: 'General', content: '' }); setIsModalOpen(true); }}
-          className="bg-slate-950 text-white px-4 py-2 rounded-none hover:bg-slate-800 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
+          className="bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-4 py-2 rounded-none hover:bg-slate-800 dark:hover:bg-slate-200 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
         >
           <Plus className="w-3 h-3" /> Add Item
         </button>
@@ -86,7 +86,7 @@ const PromptVault: React.FC = () => {
           <input 
             type="text" 
             placeholder="SEARCH DATABASE..." 
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-none focus:outline-none focus:border-slate-950 font-bold text-[10px] placeholder:text-slate-300"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[10px] placeholder:text-slate-300 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -94,7 +94,7 @@ const PromptVault: React.FC = () => {
         <div className="flex gap-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           <button 
             onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all ${selectedCategory === 'All' ? 'bg-slate-950 text-white' : 'bg-white text-slate-500 border border-slate-200'}`}
+            className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all ${selectedCategory === 'All' ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
           >
             All
           </button>
@@ -102,7 +102,7 @@ const PromptVault: React.FC = () => {
             <button 
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-slate-950 text-white' : 'bg-white text-slate-500 border border-slate-200'}`}
+              className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
             >
               {cat}
             </button>
@@ -110,43 +110,43 @@ const PromptVault: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200 border border-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
         {filteredPrompts.length === 0 ? (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center bg-white">
-            <p className="text-slate-300 font-bold text-[10px] uppercase tracking-widest">Query returned 0 results</p>
+          <div className="col-span-full py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-950">
+            <p className="text-slate-300 dark:text-slate-600 font-bold text-[10px] uppercase tracking-widest">Query returned 0 results</p>
           </div>
         ) : (
           filteredPrompts.map(prompt => (
-            <div key={prompt.id} className="group bg-white p-6 flex flex-col relative transition-colors hover:bg-slate-50">
+            <div key={prompt.id} className="group bg-white dark:bg-slate-950 p-6 flex flex-col relative transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[8px] font-bold uppercase tracking-widest border border-slate-950 px-2 py-0.5">
+                <span className="text-[8px] font-bold uppercase tracking-widest border border-slate-950 dark:border-white text-slate-950 dark:text-white px-2 py-0.5">
                   {prompt.category}
                 </span>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => openEdit(prompt)} className="text-slate-400 hover:text-slate-950">
+                  <button onClick={() => openEdit(prompt)} className="text-slate-400 dark:text-slate-600 hover:text-slate-950 dark:hover:text-white">
                     <Edit3 className="w-3 h-3" />
                   </button>
-                  <button onClick={() => handleDelete(prompt.id)} className="text-slate-400 hover:text-red-600">
+                  <button onClick={() => handleDelete(prompt.id)} className="text-slate-400 dark:text-slate-600 hover:text-red-600">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-              <h3 className="text-sm font-bold text-slate-950 mb-1 uppercase tracking-tight">{prompt.title}</h3>
-              <p className="text-slate-500 text-[10px] font-medium mb-4 uppercase leading-tight line-clamp-1">{prompt.description}</p>
+              <h3 className="text-sm font-bold text-slate-950 dark:text-white mb-1 uppercase tracking-tight">{prompt.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-[10px] font-medium mb-4 uppercase leading-tight line-clamp-1">{prompt.description}</p>
               
-              <div className="bg-slate-50 p-3 rounded-none border border-slate-100 flex-1 overflow-hidden">
-                <p className="text-[10px] text-slate-600 font-mono line-clamp-4 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-none border border-slate-100 dark:border-slate-800 flex-1 overflow-hidden">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 font-mono line-clamp-4 leading-relaxed whitespace-pre-wrap">
                   {prompt.content}
                 </p>
               </div>
 
-              <div className="mt-4 flex justify-between items-center pt-4 border-t border-slate-100">
-                <span className="text-[8px] text-slate-300 font-bold uppercase">
+              <div className="mt-4 flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[8px] text-slate-300 dark:text-slate-600 font-bold uppercase">
                   {new Date(prompt.createdAt).toLocaleDateString()}
                 </span>
                 <button 
                   onClick={() => copyToClipboard(prompt.content, prompt.id)}
-                  className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${copiedId === prompt.id ? 'text-green-600' : 'text-slate-950 hover:underline'}`}
+                  className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${copiedId === prompt.id ? 'text-green-600' : 'text-slate-950 dark:text-white hover:underline'}`}
                 >
                   {copiedId === prompt.id ? 'Copied' : 'Copy Content'}
                 </button>
@@ -157,11 +157,11 @@ const PromptVault: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-sm">
-          <div className="bg-white rounded-none w-full max-w-xl border border-slate-950 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-slate-950 flex items-center justify-between bg-white">
-              <h2 className="text-xs font-bold text-slate-950 uppercase tracking-widest">{editingPrompt ? 'Update Record' : 'Create Record'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-950">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/20 dark:bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-950 rounded-none w-full max-w-xl border border-slate-950 dark:border-slate-700 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-950 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-950">
+              <h2 className="text-xs font-bold text-slate-950 dark:text-white uppercase tracking-widest">{editingPrompt ? 'Update Record' : 'Create Record'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-950 dark:hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -169,26 +169,26 @@ const PromptVault: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Title</label>
-                  <input required type="text" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-none focus:outline-none focus:border-slate-950 font-bold text-[11px]" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                  <input required type="text" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[11px] dark:text-white" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Categorization</label>
-                  <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-none focus:outline-none focus:border-slate-950 font-bold text-[11px]" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
+                  <select className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[11px] dark:text-white" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
-                <input required type="text" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-none focus:outline-none focus:border-slate-950 font-medium text-[11px]" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+                <input required type="text" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-medium text-[11px] dark:text-white" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Logic Instructions</label>
-                <textarea required rows={6} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-none focus:outline-none focus:border-slate-950 font-mono text-[11px] leading-relaxed" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} />
+                <textarea required rows={6} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-mono text-[11px] leading-relaxed dark:text-white" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} />
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-slate-950">Abort</button>
-                <button type="submit" className="px-6 py-2 bg-slate-950 text-white rounded-none font-bold uppercase tracking-widest text-[10px] active:scale-95">Commit Entry</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-slate-950 dark:hover:text-white">Abort</button>
+                <button type="submit" className="px-6 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-none font-bold uppercase tracking-widest text-[10px] active:scale-95">Commit Entry</button>
               </div>
             </form>
           </div>

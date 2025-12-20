@@ -13,11 +13,22 @@ export const storageService = {
 
   getSettings: (): AppSettings => {
     const data = localStorage.getItem(StorageKeys.SETTINGS);
-    // isConfigured is true by default because API_KEY is managed externally via process.env
-    return data ? JSON.parse(data) : { model: 'gemini-3-flash-preview', isConfigured: true };
+    const defaults: AppSettings = { 
+      model: 'gemini-3-flash-preview', 
+      isConfigured: true, 
+      theme: 'light' 
+    };
+    return data ? { ...defaults, ...JSON.parse(data) } : defaults;
   },
 
   saveSettings: (settings: AppSettings): void => {
     localStorage.setItem(StorageKeys.SETTINGS, JSON.stringify(settings));
+    
+    // Apply theme class to document
+    if (settings.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }
 };

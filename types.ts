@@ -18,9 +18,12 @@ export interface ToolConfig {
   userPromptTemplate: (input: string, context?: string) => string;
 }
 
+export type Theme = 'light' | 'dark';
+
 export interface AppSettings {
   model: string;
   isConfigured: boolean;
+  theme: Theme;
   customInstructions?: Record<ToolType, string>;
 }
 
