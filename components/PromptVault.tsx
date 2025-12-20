@@ -3,7 +3,7 @@ import React from 'react';
 import { Prompt } from '../types';
 import { CATEGORIES } from '../constants';
 import { storageService } from '../services/storageService';
-import { Search, Plus, Trash2, Edit3, Copy, Check, X, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Trash2, Edit3, X } from 'lucide-react';
 
 const PromptVault: React.FC = () => {
   const [prompts, setPrompts] = React.useState<Prompt[]>([]);
@@ -51,6 +51,22 @@ const PromptVault: React.FC = () => {
     loadPrompts();
   };
 
+  const formatTimestamp = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const dayInMs = 24 * 60 * 60 * 1000;
+
+    if (diff < dayInMs) {
+      const seconds = Math.floor(diff / 1000);
+      if (seconds < 60) return `${seconds || 1} seconds ago`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    return new Date(timestamp).toLocaleDateString();
+  };
+
   const openEdit = (prompt: Prompt) => {
     setEditingPrompt(prompt);
     setFormData({ title: prompt.title, description: prompt.description, category: prompt.category, content: prompt.content });
@@ -80,7 +96,7 @@ const PromptVault: React.FC = () => {
           {prompts.length > 0 && (
             <button 
               onClick={() => setDeleteModal({ isOpen: true, targetId: 'ALL' })}
-              className="border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 px-4 py-2 rounded-none hover:bg-red-50 dark:hover:bg-red-950/30 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
+              className="border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 px-4 py-2 rounded-none hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
             >
               <Trash2 className="w-3 h-3" /> Clear Vault
             </button>
@@ -132,15 +148,20 @@ const PromptVault: React.FC = () => {
         ) : (
           filteredPrompts.map(prompt => (
             <div key={prompt.id} className="group bg-white dark:bg-slate-950 p-6 flex flex-col relative transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[8px] font-bold uppercase tracking-widest border border-slate-950 dark:border-white text-slate-950 dark:text-white px-2 py-0.5">
-                  {prompt.category}
-                </span>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[7px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                    {formatTimestamp(prompt.createdAt)}
+                  </span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest border border-slate-950 dark:border-white text-slate-950 dark:text-white px-2 py-0.5 w-fit">
+                    {prompt.category}
+                  </span>
+                </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => openEdit(prompt)} className="text-slate-400 dark:text-slate-600 hover:text-slate-950 dark:hover:text-white">
                     <Edit3 className="w-3 h-3" />
                   </button>
-                  <button onClick={() => setDeleteModal({ isOpen: true, targetId: prompt.id })} className="text-slate-400 dark:text-slate-600 hover:text-red-600">
+                  <button onClick={() => setDeleteModal({ isOpen: true, targetId: prompt.id })} className="text-slate-400 dark:text-slate-600 hover:text-rose-600">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
@@ -154,10 +175,7 @@ const PromptVault: React.FC = () => {
                 </p>
               </div>
 
-              <div className="mt-4 flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[8px] text-slate-300 dark:text-slate-600 font-bold uppercase">
-                  {new Date(prompt.createdAt).toLocaleDateString()}
-                </span>
+              <div className="mt-4 flex justify-end items-center pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button 
                   onClick={() => copyToClipboard(prompt.content, prompt.id)}
                   className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${copiedId === prompt.id ? 'text-green-600' : 'text-slate-950 dark:text-white hover:underline'}`}
@@ -170,39 +188,31 @@ const PromptVault: React.FC = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Simplified Delete Confirmation Modal */}
       {deleteModal.isOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/40 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-950 rounded-none w-full max-w-sm border border-red-600 dark:border-red-900 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 text-center space-y-4">
-              <div className="flex justify-center">
-                <div className="bg-red-50 dark:bg-red-950/30 p-3">
-                  <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-              <div>
-                <h2 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-widest">Confirm Deletion</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-2 leading-relaxed">
-                  {deleteModal.targetId === 'ALL' 
-                    ? 'Are you certain you want to purge your entire vault? This action is irreversible.' 
-                    : 'This record will be permanently deleted from your local storage. Proceed?'}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 pt-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-950 rounded-none w-full max-w-[260px] border border-slate-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-6 text-center space-y-6">
+              <p className="text-[12px] font-bold text-slate-950 dark:text-white uppercase tracking-wider">
+                {deleteModal.targetId === 'ALL' ? 'Purge everything?' : 'Delete this?'}
+              </p>
+
+              <div className="flex flex-col gap-1">
                 <button 
                   onClick={confirmDelete}
-                  className="w-full bg-red-600 text-white px-4 py-3 rounded-none font-bold uppercase tracking-widest text-[10px] active:scale-95 hover:bg-red-700 transition-colors"
+                  className="w-full bg-rose-800/90 dark:bg-rose-900/60 text-white px-4 py-2.5 rounded-none font-bold uppercase tracking-widest text-[9px] active:scale-95 hover:bg-rose-900 transition-all"
                 >
-                  Delete Permanently
+                  Confirm
                 </button>
                 <button 
                   onClick={() => setDeleteModal({ isOpen: false, targetId: '' })}
-                  className="w-full bg-transparent text-slate-400 dark:text-slate-500 px-4 py-2 rounded-none font-bold uppercase tracking-widest text-[10px] hover:text-slate-950 dark:hover:text-white transition-colors"
+                  className="w-full bg-transparent text-slate-400 dark:text-slate-600 px-4 py-2 rounded-none font-bold uppercase tracking-widest text-[8px] hover:text-slate-950 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             </div>
+            <div className="h-0.5 w-full bg-rose-800/40" />
           </div>
         </div>
       )}
