@@ -15,8 +15,11 @@ export const storageService = {
     const data = localStorage.getItem(StorageKeys.SETTINGS);
     const defaults: AppSettings = { 
       model: 'gemini-3-flash-preview', 
+      provider: 'gemini',
       isConfigured: true, 
-      theme: 'light' 
+      theme: 'light',
+      hasKeySelected: false,
+      apiKeys: {}
     };
     return data ? { ...defaults, ...JSON.parse(data) } : defaults;
   },

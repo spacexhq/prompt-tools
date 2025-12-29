@@ -58,11 +58,11 @@ const PromptVault: React.FC = () => {
 
     if (diff < dayInMs) {
       const seconds = Math.floor(diff / 1000);
-      if (seconds < 60) return `${seconds || 1} seconds ago`;
+      if (seconds < 60) return `${seconds || 1}s ago`;
       const minutes = Math.floor(seconds / 60);
-      if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+      if (minutes < 60) return `${minutes}m ago`;
       const hours = Math.floor(minutes / 60);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+      return `${hours}h ago`;
     }
     return new Date(timestamp).toLocaleDateString();
   };
@@ -90,33 +90,33 @@ const PromptVault: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-950 dark:text-white uppercase tracking-tight">Vault</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Knowledge Base Index</p>
+          <p className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em]">Record Index</p>
         </div>
         <div className="flex gap-2">
           {prompts.length > 0 && (
             <button 
               onClick={() => setDeleteModal({ isOpen: true, targetId: 'ALL' })}
-              className="border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 px-4 py-2 rounded-none hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
+              className="border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 px-3 py-1.5 rounded-none hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all font-bold uppercase tracking-widest text-[9px] flex items-center gap-2"
             >
-              <Trash2 className="w-3 h-3" /> Clear Vault
+              <Trash2 className="w-3 h-3" /> Purge
             </button>
           )}
           <button 
             onClick={() => { setEditingPrompt(null); setFormData({ title: '', description: '', category: 'General', content: '' }); setIsModalOpen(true); }}
-            className="bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-4 py-2 rounded-none hover:bg-slate-800 dark:hover:bg-slate-200 transition-all font-bold uppercase tracking-widest text-[10px] flex items-center gap-2"
+            className="bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-4 py-2 rounded-none hover:bg-slate-800 dark:hover:bg-slate-200 transition-all font-bold uppercase tracking-widest text-[9px] flex items-center gap-2"
           >
-            <Plus className="w-3 h-3" /> Add Item
+            <Plus className="w-3 h-3" /> New Item
           </button>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
           <input 
             type="text" 
-            placeholder="SEARCH DATABASE..." 
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[10px] placeholder:text-slate-300 dark:text-white"
+            placeholder="FILTER ENTRIES..." 
+            className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[9px] tracking-wider placeholder:text-slate-300 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -124,7 +124,7 @@ const PromptVault: React.FC = () => {
         <div className="flex gap-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           <button 
             onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all ${selectedCategory === 'All' ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
+            className={`px-3 py-1.5 rounded-none text-[8px] font-bold uppercase tracking-widest transition-all ${selectedCategory === 'All' ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
           >
             All
           </button>
@@ -132,7 +132,7 @@ const PromptVault: React.FC = () => {
             <button 
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-2 rounded-none text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
+              className={`px-3 py-1.5 rounded-none text-[8px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950' : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'}`}
             >
               {cat}
             </button>
@@ -143,44 +143,46 @@ const PromptVault: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
         {filteredPrompts.length === 0 ? (
           <div className="col-span-full py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-950">
-            <p className="text-slate-300 dark:text-slate-600 font-bold text-[10px] uppercase tracking-widest">Query returned 0 results</p>
+            <p className="text-slate-300 dark:text-slate-600 font-bold text-[9px] uppercase tracking-widest">No matching records</p>
           </div>
         ) : (
           filteredPrompts.map(prompt => (
-            <div key={prompt.id} className="group bg-white dark:bg-slate-950 p-6 flex flex-col relative transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex flex-col gap-1.5">
+            <div key={prompt.id} className="group bg-white dark:bg-slate-950 p-4 flex flex-col relative transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
                   <span className="text-[7px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                     {formatTimestamp(prompt.createdAt)}
                   </span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest border border-slate-950 dark:border-white text-slate-950 dark:text-white px-2 py-0.5 w-fit">
+                  <span className="text-[7px] font-bold uppercase tracking-widest border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 px-1.5 py-0.5">
                     {prompt.category}
                   </span>
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => openEdit(prompt)} className="text-slate-400 dark:text-slate-600 hover:text-slate-950 dark:hover:text-white">
-                    <Edit3 className="w-3 h-3" />
+                    <Edit3 className="w-2.5 h-2.5" />
                   </button>
                   <button onClick={() => setDeleteModal({ isOpen: true, targetId: prompt.id })} className="text-slate-400 dark:text-slate-600 hover:text-rose-600">
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
-              <h3 className="text-sm font-bold text-slate-950 dark:text-white mb-1 uppercase tracking-tight">{prompt.title}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-[10px] font-medium mb-4 uppercase leading-tight line-clamp-1">{prompt.description}</p>
               
-              <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-none border border-slate-100 dark:border-slate-800 flex-1 overflow-hidden">
-                <p className="text-[10px] text-slate-600 dark:text-slate-400 font-mono line-clamp-4 leading-relaxed whitespace-pre-wrap">
+              <h3 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 mb-0.5 uppercase tracking-wide leading-tight line-clamp-2">{prompt.title}</h3>
+              <p className="text-slate-400 dark:text-slate-500 text-[9px] font-normal mb-3 uppercase tracking-tight line-clamp-1">{prompt.description}</p>
+              
+              <div className="bg-slate-50/50 dark:bg-slate-900/30 p-2.5 rounded-none border border-slate-100/50 dark:border-slate-800/50 flex-1 overflow-hidden">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 font-mono line-clamp-3 leading-relaxed whitespace-pre-wrap">
                   {prompt.content}
                 </p>
               </div>
 
-              <div className="mt-4 flex justify-end items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-3 flex justify-between items-center pt-3 border-t border-slate-100/50 dark:border-slate-800/50">
+                <span className="text-[8px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-tighter">PV-ID: {prompt.id.slice(0, 8)}</span>
                 <button 
                   onClick={() => copyToClipboard(prompt.content, prompt.id)}
-                  className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${copiedId === prompt.id ? 'text-green-600' : 'text-slate-950 dark:text-white hover:underline'}`}
+                  className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${copiedId === prompt.id ? 'text-green-600' : 'text-slate-950 dark:text-white hover:opacity-70'}`}
                 >
-                  {copiedId === prompt.id ? 'Copied' : 'Copy Content'}
+                  {copiedId === prompt.id ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>
@@ -188,19 +190,18 @@ const PromptVault: React.FC = () => {
         )}
       </div>
 
-      {/* Simplified Delete Confirmation Modal */}
       {deleteModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-slate-950 rounded-none w-full max-w-[260px] border border-slate-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
             <div className="p-6 text-center space-y-6">
-              <p className="text-[12px] font-bold text-slate-950 dark:text-white uppercase tracking-wider">
-                {deleteModal.targetId === 'ALL' ? 'Purge everything?' : 'Delete this?'}
+              <p className="text-[11px] font-bold text-slate-950 dark:text-white uppercase tracking-wider">
+                {deleteModal.targetId === 'ALL' ? 'Purge database?' : 'Remove entry?'}
               </p>
 
               <div className="flex flex-col gap-1">
                 <button 
                   onClick={confirmDelete}
-                  className="w-full bg-rose-800/90 dark:bg-rose-900/60 text-white px-4 py-2.5 rounded-none font-bold uppercase tracking-widest text-[9px] active:scale-95 hover:bg-rose-900 transition-all"
+                  className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-4 py-2.5 rounded-none font-bold uppercase tracking-widest text-[9px] active:scale-95 hover:bg-slate-800 dark:hover:bg-slate-200 transition-all"
                 >
                   Confirm
                 </button>
@@ -212,7 +213,6 @@ const PromptVault: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="h-0.5 w-full bg-rose-800/40" />
           </div>
         </div>
       )}
@@ -221,7 +221,7 @@ const PromptVault: React.FC = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/20 dark:bg-black/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-950 rounded-none w-full max-w-xl border border-slate-950 dark:border-slate-700 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-slate-950 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-950">
-              <h2 className="text-xs font-bold text-slate-950 dark:text-white uppercase tracking-widest">{editingPrompt ? 'Update Record' : 'Create Record'}</h2>
+              <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">{editingPrompt ? 'Update Record' : 'New Entry'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-950 dark:hover:text-white">
                 <X className="w-4 h-4" />
               </button>
@@ -229,27 +229,27 @@ const PromptVault: React.FC = () => {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Title</label>
-                  <input required type="text" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[11px] dark:text-white" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Entry Title</label>
+                  <input required type="text" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[10px] dark:text-white uppercase tracking-tight" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Categorization</label>
-                  <select className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[11px] dark:text-white" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
+                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Category</label>
+                  <select className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-bold text-[10px] dark:text-white uppercase" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
-                <input required type="text" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-medium text-[11px] dark:text-white" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+                <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Quick Desc</label>
+                <input required type="text" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-medium text-[10px] dark:text-white uppercase" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Logic Instructions</label>
-                <textarea required rows={6} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-mono text-[11px] leading-relaxed dark:text-white" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} />
+                <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">System Instruction</label>
+                <textarea required rows={6} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none focus:outline-none focus:border-slate-950 dark:focus:border-white font-mono text-[10px] leading-relaxed dark:text-white" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} />
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-slate-950 dark:hover:text-white">Abort</button>
-                <button type="submit" className="px-6 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-none font-bold uppercase tracking-widest text-[10px] active:scale-95">Commit Entry</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[9px] font-bold uppercase text-slate-400 hover:text-slate-950 dark:hover:text-white">Abort</button>
+                <button type="submit" className="px-6 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-none font-bold uppercase tracking-widest text-[9px] active:scale-95">Commit</button>
               </div>
             </form>
           </div>

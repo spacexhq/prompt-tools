@@ -1,5 +1,5 @@
 
-import { ToolType, ToolConfig } from './types';
+import { ToolType, ToolConfig, AIProvider } from './types';
 
 export const CATEGORIES = [
   'General',
@@ -11,9 +11,21 @@ export const CATEGORIES = [
   'Creative'
 ];
 
-export const AI_MODELS = [
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Fast)' },
-  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Complex Reasoning)' }
+export interface ModelOption {
+  id: string;
+  name: string;
+  provider: AIProvider;
+}
+
+export const AI_MODELS: ModelOption[] = [
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', provider: 'gemini' },
+  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', provider: 'gemini' },
+  { id: 'gpt-4o', name: 'OpenAI GPT-4o', provider: 'openai' },
+  { id: 'gpt-4o-mini', name: 'OpenAI GPT-4o Mini', provider: 'openai' },
+  { id: 'llama-3.3-70b-versatile', name: 'Groq Llama 3.3 70B', provider: 'groq' },
+  { id: 'mixtral-8x7b-32768', name: 'Groq Mixtral 8x7B', provider: 'groq' },
+  { id: 'qwen/qwen-2.5-72b-instruct', name: 'OpenRouter Qwen 2.5', provider: 'openrouter' },
+  { id: 'anthropic/claude-3.5-sonnet', name: 'OpenRouter Claude 3.5', provider: 'openrouter' },
 ];
 
 export const TOOLS: Record<ToolType, ToolConfig> = {

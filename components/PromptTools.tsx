@@ -2,7 +2,7 @@
 import React from 'react';
 import { ToolType, Prompt } from '../types';
 import { TOOLS } from '../constants';
-import { geminiService } from '../services/geminiService';
+import { aiService } from '../services/aiService';
 import { storageService } from '../services/storageService';
 import { RefreshCcw, Zap, Type as ToneIcon, AlignLeft, Maximize2, Send, Loader2, Copy, Check, Save, ArrowRight, AlertCircle } from 'lucide-react';
 
@@ -23,9 +23,11 @@ const PromptTools: React.FC<{initialTool?: ToolType}> = ({ initialTool = 'rephra
     setIsLoading(true); setError(null); setOutputs([]);
     try {
       const userPrompt = activeTool === 'tone' ? config.userPromptTemplate(input, tone) : config.userPromptTemplate(input);
-      const result = await geminiService.generate(activeTool, config.systemPrompt, userPrompt);
+      const result = await aiService.generate(activeTool, config.systemPrompt, userPrompt);
       setOutputs(result);
-    } catch (err: any) { setError(err.message || 'Processing Error'); }
+    } catch (err: any) { 
+      setError(err.message || 'Processing Error'); 
+    }
     finally { setIsLoading(false); }
   };
 
@@ -36,8 +38,6 @@ const PromptTools: React.FC<{initialTool?: ToolType}> = ({ initialTool = 'rephra
 
   const handleSaveToVault = (text: string, index: number) => {
     const prompts = storageService.getPrompts();
-    
-    // Prevent duplicates by checking if content already exists
     const isDuplicate = prompts.some(p => p.content.trim() === text.trim());
     if (isDuplicate) {
       alert('This variant is already saved in your vault.');
@@ -81,7 +81,7 @@ const PromptTools: React.FC<{initialTool?: ToolType}> = ({ initialTool = 'rephra
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-slate-950 dark:text-white tracking-tight uppercase">AI Studio</h1>
-        <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Neural Text Processing</p>
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Cross-Model Inference</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -130,7 +130,7 @@ const PromptTools: React.FC<{initialTool?: ToolType}> = ({ initialTool = 'rephra
               className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-3 rounded-none font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 transition-all text-[11px] active:scale-95"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-              <span>{isLoading ? 'Processing' : 'Execute Transformation'}</span>
+              <span>{isLoading ? 'Synthesizing' : 'Execute Transformation'}</span>
             </button>
             {error && (
               <div className="p-3 bg-red-50 dark:bg-red-950/20 flex items-center gap-2 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50">
@@ -144,14 +144,14 @@ const PromptTools: React.FC<{initialTool?: ToolType}> = ({ initialTool = 'rephra
         <div className="space-y-4">
           {!isLoading && outputs.length === 0 && !error && (
             <div className="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-100 dark:border-slate-900 p-20 text-center flex flex-col items-center justify-center">
-              <p className="text-slate-300 dark:text-slate-700 font-bold uppercase tracking-widest text-[9px]">Awaiting Instructions</p>
+              <p className="text-slate-300 dark:text-slate-700 font-bold uppercase tracking-widest text-[9px]">Neural Buffer Empty</p>
             </div>
           )}
 
           {isLoading && (
             <div className="bg-white dark:bg-slate-950 p-20 text-center flex flex-col items-center justify-center border border-slate-100 dark:border-slate-900 animate-pulse">
               <Loader2 className="w-8 h-8 text-slate-200 dark:text-slate-800 animate-spin" />
-              <p className="text-slate-300 dark:text-slate-700 font-bold uppercase tracking-widest text-[8px] mt-4">Drafting variants...</p>
+              <p className="text-slate-300 dark:text-slate-700 font-bold uppercase tracking-widest text-[8px] mt-4">Drafting variants via neural engine...</p>
             </div>
           )}
 

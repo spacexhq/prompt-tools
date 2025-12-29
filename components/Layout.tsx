@@ -6,9 +6,13 @@ import {
   Wand2, 
   Settings as SettingsIcon,
   Sun,
-  Moon
+  Moon,
+  Cpu,
+  Key
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { AI_MODELS } from '../constants';
+import { Theme, AppSettings } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +21,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate }) => {
-  const [theme, setTheme] = React.useState(storageService.getSettings().theme);
+  // Fix: Explicitly type the settings state as AppSettings
+  const [settings, setSettings] = React.useState<AppSettings>(storageService.getSettings());
 
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
@@ -27,11 +32,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate }) => 
   ];
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    const settings = storageService.getSettings();
-    storageService.saveSettings({ ...settings, theme: newTheme });
-    setTheme(newTheme);
+    // Fix: Explicitly type newTheme as Theme to prevent it being inferred as string
+    const newTheme: Theme = settings.theme === 'light' ? 'dark' : 'light';
+    const updated: AppSettings = { ...settings, theme: newTheme };
+    storageService.saveSettings(updated);
+    setSettings(updated);
   };
+
+  const activeModelName = AI_MODELS.find(m => m.id === settings.model)?.name.split('(')[0] || 'Default';
 
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-slate-950 overflow-hidden font-sans transition-colors duration-200">
@@ -47,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate }) => 
           onClick={toggleTheme}
           className="p-2 text-slate-950 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
-          {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          {settings.theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
         </button>
       </header>
 
@@ -80,13 +88,27 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate }) => 
               );
             })}
           </nav>
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+
+          {/* Engine Status Widget */}
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-3 h-3 text-slate-400" />
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{activeModelName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Key className={`w-3 h-3 ${settings.hasKeySelected ? 'text-green-500' : 'text-rose-500'}`} />
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                  {settings.hasKeySelected ? 'Project Linked' : 'Key Required'}
+                </span>
+              </div>
+            </div>
             <button 
               onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
+              className="w-full flex items-center gap-3 px-2 py-1 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
             >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+              {settings.theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              <span>{settings.theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
             </button>
           </div>
         </aside>

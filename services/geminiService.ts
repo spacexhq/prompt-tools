@@ -7,15 +7,16 @@ export const geminiService = {
   generate: async (toolType: ToolType, defaultInstruction: string, prompt: string): Promise<string[]> => {
     const settings = storageService.getSettings();
     
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY not found in environment.");
+    // Always create a fresh instance to ensure the latest selected API key is used
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("No API key selected. Please configure a key in Settings.");
     }
 
-    // Use custom instruction if set by user in Settings, otherwise fallback to tool default
     const systemInstruction = settings.customInstructions?.[toolType] || defaultInstruction;
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: settings.model || 'gemini-3-flash-preview',
         contents: prompt,
@@ -40,15 +41,20 @@ export const geminiService = {
         return [text];
       }
     } catch (error: any) {
-      console.error("Gemini AI Error:", error);
+      console.error("Inference Error:", error);
+      if (error.message?.includes("Requested entity was not found")) {
+        storageService.saveSettings({ ...settings, hasKeySelected: false });
+        throw new Error("Invalid or expired project key. Please re-select your key in Settings.");
+      }
       throw new Error(error.message || "Failed to generate content");
     }
   },
 
   testConnection: async (model: string) => {
-    if (!process.env.API_KEY) return false;
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return false;
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: model,
         contents: "Respond with 'Connected' if the API key is working.",

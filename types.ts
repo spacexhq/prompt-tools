@@ -20,11 +20,20 @@ export interface ToolConfig {
 
 export type Theme = 'light' | 'dark';
 
+export type AIProvider = 'gemini' | 'openai' | 'groq' | 'openrouter';
+
 export interface AppSettings {
   model: string;
+  provider: AIProvider;
   isConfigured: boolean;
   theme: Theme;
   customInstructions?: Record<ToolType, string>;
+  hasKeySelected: boolean; // For Gemini-specific native selector
+  apiKeys: {
+    openai?: string;
+    groq?: string;
+    openrouter?: string;
+  };
 }
 
 export enum StorageKeys {
