@@ -9,57 +9,64 @@ export const aiService = {
     const systemInstruction = settings.customInstructions?.[toolType] || defaultInstruction;
     const provider = settings.provider || 'gemini';
 
-    if (provider === 'gemini') {
-      if (settings.useProxy && settings.proxyUrl) {
-        // Combined prompt structure for simple workers
-        const combinedPrompt = `[SYSTEM INSTRUCTION]\n${systemInstruction}\n\n[USER INPUT]\n${prompt}\n\nIMPORTANT: Respond ONLY with a valid JSON array of strings. No markdown formatting.`;
-        return aiService.generateViaProxy(settings.proxyUrl, combinedPrompt);
-      }
-      return aiService.generateGemini(settings.model, systemInstruction, prompt);
-    } else {
-      return aiService.generateOpenAICompatible(provider, settings.model, systemInstruction, prompt);
+    // Priority 1: Cloudflare Worker Proxy (Solves Localhost 400 errors)
+    if (provider === 'gemini' && settings.useProxy && settings.proxyUrl) {
+      const combinedPrompt = `SYSTEM INSTRUCTION: ${systemInstruction}\n\nUSER INPUT: ${prompt}\n\nIMPORTANT: Respond ONLY with a valid JSON array of strings.`;
+      return aiService.generateViaProxy(settings.proxyUrl, combinedPrompt);
     }
+
+    // Priority 2: Native Gemini (Requires API_KEY in env, usually fails on local browser)
+    if (provider === 'gemini') {
+      return aiService.generateGemini(settings.model, systemInstruction, prompt);
+    }
+
+    // Priority 3: Other Providers (OpenAI/Groq)
+    return aiService.generateOpenAICompatible(provider, settings.model, systemInstruction, prompt);
   },
 
   generateViaProxy: async (proxyUrl: string, combinedPrompt: string): Promise<string[]> => {
-    // Clean URL: Remove whitespace and any accidental query strings (e.g. ?Content-Type=...)
-    const cleanUrl = proxyUrl.trim().replace(/\?.*$/, '');
+    // Ensure clean URL without query strings as per user instruction
+    const cleanUrl = proxyUrl.trim().split('?')[0];
     
-    const response = await fetch(cleanUrl, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' // Explicitly set header as requested
-      },
-      body: JSON.stringify({ prompt: combinedPrompt })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Proxy Node Error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    
-    // Parse Gemini response structure from worker
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                 data.candidates?.[0]?.text ||
-                 data.text || 
-                 data.response;
-    
-    if (!text) throw new Error("Null response from inference engine.");
-
     try {
-      // Clean potential markdown and parse
+      const response = await fetch(cleanUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ prompt: combinedPrompt })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Worker Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Handle various response shapes from the worker
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                   data.text || 
+                   data.response || 
+                   data.output;
+      
+      if (!text) throw new Error("Worker returned no content. Check Worker API Key.");
+
+      // Clean markdown formatting if model wrapped JSON in backticks
       const cleanedText = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(cleanedText);
-      return Array.isArray(parsed) ? parsed : [cleanedText];
-    } catch {
-      return [text];
+      try {
+        const parsed = JSON.parse(cleanedText);
+        return Array.isArray(parsed) ? parsed : [cleanedText];
+      } catch {
+        return [text]; // Fallback to raw text if not JSON
+      }
+    } catch (err: any) {
+      throw new Error(`Proxy Link Failed: ${err.message}. Ensure your Worker is active.`);
     }
   },
 
   generateGemini: async (model: string, system: string, prompt: string): Promise<string[]> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("Inbound Key missing. Select project in Settings.");
+    if (!apiKey) throw new Error("Local API_KEY not found. Switch to 'Proxy Mode' in Settings.");
 
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
@@ -92,21 +99,12 @@ export const aiService = {
     let url = '';
 
     switch (provider) {
-      case 'openai':
-        apiKey = settings.apiKeys.openai || '';
-        url = 'https://api.openai.com/v1/chat/completions';
-        break;
-      case 'groq':
-        apiKey = settings.apiKeys.groq || '';
-        url = 'https://api.groq.com/openai/v1/chat/completions';
-        break;
-      case 'openrouter':
-        apiKey = settings.apiKeys.openrouter || '';
-        url = 'https://openrouter.ai/api/v1/chat/completions';
-        break;
+      case 'openai': apiKey = settings.apiKeys.openai || ''; url = 'https://api.openai.com/v1/chat/completions'; break;
+      case 'groq': apiKey = settings.apiKeys.groq || ''; url = 'https://api.groq.com/openai/v1/chat/completions'; break;
+      case 'openrouter': apiKey = settings.apiKeys.openrouter || ''; url = 'https://openrouter.ai/api/v1/chat/completions'; break;
     }
 
-    if (!apiKey) throw new Error(`API Key for ${provider.toUpperCase()} not found.`);
+    if (!apiKey) throw new Error(`API key for ${provider.toUpperCase()} not found.`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -126,12 +124,11 @@ export const aiService = {
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.error?.message || `Provider Handshake Fail: ${response.status}`);
+      throw new Error(err.error?.message || `Provider Fail: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.choices[0]?.message?.content;
-
     try {
       const cleaned = content.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleaned);
@@ -148,7 +145,7 @@ export const aiService = {
     try {
       if (provider === 'gemini') {
         if (settings.useProxy && settings.proxyUrl) {
-          const res = await fetch(settings.proxyUrl.replace(/\?.*$/, ''), { 
+          const res = await fetch(settings.proxyUrl.split('?')[0], { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: 'ping' }) 

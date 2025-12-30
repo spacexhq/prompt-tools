@@ -4,7 +4,7 @@ import { AppSettings, ToolType, AIProvider } from '../types';
 import { AI_MODELS, TOOLS } from '../constants';
 import { storageService } from '../services/storageService';
 import { aiService } from '../services/aiService';
-import { AlertCircle, CheckCircle2, Loader2, Save, Cpu, FlaskConical, ChevronDown, ChevronUp, Key, ExternalLink, Globe, Zap, Eye, EyeOff, ShieldCheck, ShieldAlert, Server } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Save, Cpu, Key, ExternalLink, Globe, ShieldCheck, ShieldAlert, Server, Info } from 'lucide-react';
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
 
@@ -12,7 +12,6 @@ const Settings: React.FC = () => {
   const [settings, setSettings] = React.useState<AppSettings>(storageService.getSettings());
   const [isTesting, setIsTesting] = React.useState(false);
   const [testResult, setTestResult] = React.useState<'success' | 'error' | null>(null);
-  const [showKeys, setShowKeys] = React.useState<Record<string, boolean>>({});
   
   const [valStatuses, setValStatuses] = React.useState<Record<string, ValidationStatus>>({
     openai: 'idle',
@@ -78,99 +77,63 @@ const Settings: React.FC = () => {
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <div>
         <h1 className="text-2xl font-bold text-slate-950 dark:text-white uppercase tracking-tight">Configuration</h1>
-        <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Validated Cross-Provider Logic</p>
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">System Protocols</p>
       </div>
 
       <div className="space-y-6">
         {/* Security & Proxy Section */}
-        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
             <Server className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Security & Proxy</h2>
+            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Inference Proxy (Production Mode)</h2>
           </div>
           <div className="p-6 space-y-4">
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 flex gap-3">
+              <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+              <p className="text-[9px] font-medium text-indigo-700 dark:text-indigo-400 uppercase leading-relaxed">
+                Using a Cloudflare Worker proxy is required for localhost. It secures your API keys and prevents 400 'Invalid Key' errors.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase">Use Secure Worker Proxy</p>
-                <p className="text-[8px] text-slate-500 uppercase tracking-tight">Routes Gemini calls through your Cloudflare Worker</p>
+                <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase">Proxy Routing</p>
+                <p className={`text-[8px] uppercase tracking-tight font-bold ${settings.useProxy ? 'text-green-600' : 'text-slate-400'}`}>
+                  {settings.useProxy ? 'Active - Routing through Worker' : 'Inactive - Direct Browser Request'}
+                </p>
               </div>
               <button 
                 onClick={() => setSettings({...settings, useProxy: !settings.useProxy})}
-                className={`w-10 h-5 rounded-full relative transition-colors ${settings.useProxy ? 'bg-slate-950 dark:bg-white' : 'bg-slate-200 dark:bg-slate-800'}`}
+                className={`w-10 h-5 rounded-full relative transition-colors ${settings.useProxy ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-800'}`}
               >
-                <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${settings.useProxy ? 'right-1 bg-white dark:bg-slate-950' : 'left-1 bg-white dark:bg-slate-400'}`} />
+                <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${settings.useProxy ? 'right-1 bg-white' : 'left-1 bg-white dark:bg-slate-400'}`} />
               </button>
             </div>
             
-            {settings.useProxy && (
-              <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Worker Endpoint URL</label>
-                <input 
-                  type="text"
-                  placeholder="https://your-worker.workers.dev"
-                  className="w-full px-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-mono text-[10px] dark:text-white focus:outline-none"
-                  value={settings.proxyUrl || ''}
-                  onChange={(e) => setSettings({...settings, proxyUrl: e.target.value})}
-                />
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Global Keychain */}
-        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
-            <Globe className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Global Keychain</h2>
-          </div>
-          <div className="p-6 space-y-6">
-            {!settings.useProxy && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-950 dark:text-white">Gemini (Native)</span>
-                  <span className={`h-1.5 w-1.5 rounded-full ${settings.hasKeySelected ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
-                </div>
-                <button onClick={handleOpenGeminiKey} className="w-full text-left px-4 py-2 border border-slate-200 dark:border-slate-800 text-[10px] font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex items-center justify-between">
-                  <span>{settings.hasKeySelected ? 'Project Key Linked' : 'Connect GCP Project'}</span>
-                  <ExternalLink className="w-3 h-3 opacity-50" />
-                </button>
-              </div>
-            )}
-
-            {['openai', 'groq', 'openrouter'].map((provider) => (
-              <div key={provider} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-950 dark:text-white">{provider}</span>
-                  <div className="flex items-center gap-2">
-                    {valStatuses[provider] === 'checking' ? <Loader2 className="w-3 h-3 animate-spin" /> : 
-                     valStatuses[provider] === 'valid' ? <ShieldCheck className="w-3 h-3 text-green-500" /> : 
-                     valStatuses[provider] === 'invalid' ? <ShieldAlert className="w-3 h-3 text-rose-500" /> : null}
-                  </div>
-                </div>
-                <div className="relative">
-                  <input 
-                    type={showKeys[provider] ? "text" : "password"}
-                    placeholder={`ENTER ${provider.toUpperCase()} API KEY`}
-                    className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-mono text-[10px] dark:text-white focus:outline-none"
-                    value={(settings.apiKeys as any)[provider] || ''}
-                    onChange={(e) => updateKey(provider, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
+            <div className="space-y-2">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Worker Endpoint URL</label>
+              <input 
+                type="text"
+                placeholder="https://your-worker.workers.dev"
+                className="w-full px-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-mono text-[10px] dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                value={settings.proxyUrl || ''}
+                onChange={(e) => setSettings({...settings, proxyUrl: e.target.value})}
+              />
+              <p className="text-[7px] text-slate-400 uppercase italic">Must be a POST endpoint returning valid JSON.</p>
+            </div>
           </div>
         </section>
 
         {/* Engine Selection */}
-        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
             <Cpu className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Active Inference Engine</h2>
+            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Inference Engine</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Model Architecture</label>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Model Selection</label>
                 <select 
                   className="w-full px-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-[11px] dark:text-white focus:outline-none"
                   value={settings.model}
@@ -185,27 +148,52 @@ const Settings: React.FC = () => {
                   disabled={isTesting}
                   className="w-full py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-bold uppercase tracking-widest text-[9px] active:scale-95 disabled:opacity-50 transition-all h-[38px]"
                 >
-                  {isTesting ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : 'TEST ENDPOINT'}
+                  {isTesting ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : 'Ping Neural Node'}
                 </button>
               </div>
             </div>
 
             {testResult && (
-              <div className={`p-4 flex items-center gap-3 border ${testResult === 'success' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/50' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50'}`}>
+              <div className={`p-4 flex items-center gap-3 border animate-in slide-in-from-top-2 ${testResult === 'success' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/50' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50'}`}>
                 {testResult === 'success' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-red-500" />}
-                <p className="text-[10px] font-bold uppercase tracking-tight">
-                  {testResult === 'success' ? `Global Handshake successful with ${settings.provider.toUpperCase()}` : 'Global Handshake failure'}
+                <p className="text-[9px] font-bold uppercase tracking-tight">
+                  {testResult === 'success' ? 'Endpoint Handshake Verified' : 'Handshake Failed. Check Worker secret keys.'}
                 </p>
               </div>
             )}
           </div>
         </section>
 
+        {/* Secondary Keys */}
+        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-100 transition-opacity">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+            <Globe className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Alternative Providers</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            {['openai', 'groq', 'openrouter'].map((provider) => (
+              <div key={provider} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{provider}</span>
+                  {valStatuses[provider] === 'valid' && <ShieldCheck className="w-3 h-3 text-green-500" />}
+                </div>
+                <input 
+                  type="password"
+                  placeholder={`PASTE ${provider.toUpperCase()} KEY`}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-mono text-[9px] dark:text-white focus:outline-none"
+                  value={(settings.apiKeys as any)[provider] || ''}
+                  onChange={(e) => updateKey(provider, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
         <button 
           onClick={handleSave}
-          className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-4 rounded-none font-bold uppercase tracking-[0.3em] hover:bg-slate-800 dark:hover:bg-slate-100 transition-all text-[11px] active:scale-95"
+          className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-4 rounded-none font-bold uppercase tracking-[0.3em] hover:bg-slate-800 dark:hover:bg-slate-100 transition-all text-[11px] active:scale-95 shadow-lg"
         >
-          Commit All Keys & Settings
+          Commit Configuration
         </button>
       </div>
     </div>
