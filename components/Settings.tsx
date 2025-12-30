@@ -4,7 +4,7 @@ import { AppSettings, ToolType, AIProvider } from '../types';
 import { AI_MODELS, TOOLS } from '../constants';
 import { storageService } from '../services/storageService';
 import { aiService } from '../services/aiService';
-import { AlertCircle, CheckCircle2, Loader2, Save, Cpu, Key, ExternalLink, Globe, ShieldCheck, ShieldAlert, Server, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Save, Cpu, Key, ExternalLink, Globe, ShieldCheck, ShieldAlert, Server, Info, Terminal, Code } from 'lucide-react';
 
 type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
 
@@ -12,14 +12,13 @@ const Settings: React.FC = () => {
   const [settings, setSettings] = React.useState<AppSettings>(storageService.getSettings());
   const [isTesting, setIsTesting] = React.useState(false);
   const [testResult, setTestResult] = React.useState<'success' | 'error' | null>(null);
+  const [showCorsHelp, setShowCorsHelp] = React.useState(false);
   
   const [valStatuses, setValStatuses] = React.useState<Record<string, ValidationStatus>>({
     openai: 'idle',
     groq: 'idle',
     openrouter: 'idle'
   });
-
-  const aistudio = (window as any).aistudio;
 
   React.useEffect(() => {
     const providers = ['openai', 'groq', 'openrouter'] as const;
@@ -38,13 +37,6 @@ const Settings: React.FC = () => {
     return () => timers.forEach(t => t && clearTimeout(t));
   }, [settings.apiKeys]);
 
-  const handleOpenGeminiKey = async () => {
-    if (aistudio?.openSelectKey) {
-      await aistudio.openSelectKey();
-      setSettings(prev => ({ ...prev, hasKeySelected: true }));
-    }
-  };
-
   const updateKey = (provider: string, val: string) => {
     setSettings(prev => ({
       ...prev,
@@ -62,7 +54,11 @@ const Settings: React.FC = () => {
     try {
       const ok = await aiService.testConnection(settings.provider, settings.model);
       setTestResult(ok ? 'success' : 'error');
-    } catch { setTestResult('error'); }
+      if (!ok) setShowCorsHelp(true);
+    } catch (err: any) { 
+      setTestResult('error'); 
+      setShowCorsHelp(true);
+    }
     finally { setIsTesting(false); }
   };
 
@@ -85,13 +81,13 @@ const Settings: React.FC = () => {
         <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
             <Server className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Inference Proxy (Production Mode)</h2>
+            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Inference Proxy (Bypass 400 Errors)</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 flex gap-3">
               <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
               <p className="text-[9px] font-medium text-indigo-700 dark:text-indigo-400 uppercase leading-relaxed">
-                Using a Cloudflare Worker proxy is required for localhost. It secures your API keys and prevents 400 'Invalid Key' errors.
+                A Cloudflare Worker proxy is mandatory for local development. It secures your Gemini API Key and prevents the 'Invalid API Key' 400 error.
               </p>
             </div>
 
@@ -99,7 +95,7 @@ const Settings: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase">Proxy Routing</p>
                 <p className={`text-[8px] uppercase tracking-tight font-bold ${settings.useProxy ? 'text-green-600' : 'text-slate-400'}`}>
-                  {settings.useProxy ? 'Active - Routing through Worker' : 'Inactive - Direct Browser Request'}
+                  {settings.useProxy ? 'Active - Tunneling Enabled' : 'Inactive - Direct Browser Request'}
                 </p>
               </div>
               <button 
@@ -119,8 +115,38 @@ const Settings: React.FC = () => {
                 value={settings.proxyUrl || ''}
                 onChange={(e) => setSettings({...settings, proxyUrl: e.target.value})}
               />
-              <p className="text-[7px] text-slate-400 uppercase italic">Must be a POST endpoint returning valid JSON.</p>
             </div>
+
+            {showCorsHelp && (
+              <div className="animate-in slide-in-from-top-2 duration-300">
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 space-y-4">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                    <AlertCircle className="w-3 h-3" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest">CORS Preflight (OPTIONS) Missing</span>
+                  </div>
+                  <p className="text-[8px] text-amber-600 dark:text-amber-500 font-medium uppercase leading-tight">
+                    Browsers block localhost requests unless your Worker specifically allows them. Add this logic to the top of your Worker:
+                  </p>
+                  <div className="bg-slate-950 p-4 rounded-none overflow-x-auto border border-slate-800 relative group">
+                    <pre className="text-[8px] text-slate-300 font-mono leading-relaxed">
+{`// Add this at the start of your fetch handler:
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+if (request.method === "OPTIONS") {
+  return new Response(null, { headers: corsHeaders });
+}`}
+                    </pre>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <Code className="w-3 h-3 text-slate-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -128,12 +154,12 @@ const Settings: React.FC = () => {
         <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
             <Cpu className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Inference Engine</h2>
+            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Neural Logic Core</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Model Selection</label>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inference Model</label>
                 <select 
                   className="w-full px-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-[11px] dark:text-white focus:outline-none"
                   value={settings.model}
@@ -148,7 +174,7 @@ const Settings: React.FC = () => {
                   disabled={isTesting}
                   className="w-full py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-bold uppercase tracking-widest text-[9px] active:scale-95 disabled:opacity-50 transition-all h-[38px]"
                 >
-                  {isTesting ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : 'Ping Neural Node'}
+                  {isTesting ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : 'Ping Endpoint'}
                 </button>
               </div>
             </div>
@@ -157,35 +183,10 @@ const Settings: React.FC = () => {
               <div className={`p-4 flex items-center gap-3 border animate-in slide-in-from-top-2 ${testResult === 'success' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/50' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50'}`}>
                 {testResult === 'success' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-red-500" />}
                 <p className="text-[9px] font-bold uppercase tracking-tight">
-                  {testResult === 'success' ? 'Endpoint Handshake Verified' : 'Handshake Failed. Check Worker secret keys.'}
+                  {testResult === 'success' ? 'Connection Link Verified' : 'Connection Link Refused. Check Worker CORS.'}
                 </p>
               </div>
             )}
-          </div>
-        </section>
-
-        {/* Secondary Keys */}
-        <section className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-100 transition-opacity">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/50">
-            <Globe className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <h2 className="text-[10px] font-bold text-slate-950 dark:text-white uppercase tracking-widest">Alternative Providers</h2>
-          </div>
-          <div className="p-6 space-y-4">
-            {['openai', 'groq', 'openrouter'].map((provider) => (
-              <div key={provider} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{provider}</span>
-                  {valStatuses[provider] === 'valid' && <ShieldCheck className="w-3 h-3 text-green-500" />}
-                </div>
-                <input 
-                  type="password"
-                  placeholder={`PASTE ${provider.toUpperCase()} KEY`}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-mono text-[9px] dark:text-white focus:outline-none"
-                  value={(settings.apiKeys as any)[provider] || ''}
-                  onChange={(e) => updateKey(provider, e.target.value)}
-                />
-              </div>
-            ))}
           </div>
         </section>
 

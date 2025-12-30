@@ -9,64 +9,62 @@ export const aiService = {
     const systemInstruction = settings.customInstructions?.[toolType] || defaultInstruction;
     const provider = settings.provider || 'gemini';
 
-    // Priority 1: Cloudflare Worker Proxy (Solves Localhost 400 errors)
     if (provider === 'gemini' && settings.useProxy && settings.proxyUrl) {
       const combinedPrompt = `SYSTEM INSTRUCTION: ${systemInstruction}\n\nUSER INPUT: ${prompt}\n\nIMPORTANT: Respond ONLY with a valid JSON array of strings.`;
       return aiService.generateViaProxy(settings.proxyUrl, combinedPrompt);
     }
 
-    // Priority 2: Native Gemini (Requires API_KEY in env, usually fails on local browser)
     if (provider === 'gemini') {
       return aiService.generateGemini(settings.model, systemInstruction, prompt);
     }
 
-    // Priority 3: Other Providers (OpenAI/Groq)
     return aiService.generateOpenAICompatible(provider, settings.model, systemInstruction, prompt);
   },
 
   generateViaProxy: async (proxyUrl: string, combinedPrompt: string): Promise<string[]> => {
-    // Ensure clean URL without query strings as per user instruction
     const cleanUrl = proxyUrl.trim().split('?')[0];
     
     try {
       const response = await fetch(cleanUrl, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ prompt: combinedPrompt })
       });
 
       if (!response.ok) {
-        throw new Error(`Worker Error: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Worker Error (${response.status}): ${errorText.substring(0, 100)}`);
       }
 
       const data = await response.json();
-      
-      // Handle various response shapes from the worker
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 
                    data.text || 
                    data.response || 
                    data.output;
       
-      if (!text) throw new Error("Worker returned no content. Check Worker API Key.");
+      if (!text) throw new Error("Worker returned no content. Verify your Worker's Gemini API call.");
 
-      // Clean markdown formatting if model wrapped JSON in backticks
       const cleanedText = text.replace(/```json|```/g, '').trim();
       try {
         const parsed = JSON.parse(cleanedText);
         return Array.isArray(parsed) ? parsed : [cleanedText];
       } catch {
-        return [text]; // Fallback to raw text if not JSON
+        return [text];
       }
     } catch (err: any) {
-      throw new Error(`Proxy Link Failed: ${err.message}. Ensure your Worker is active.`);
+      // Logic to distinguish between CORS/Network errors and actual API errors
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        throw new Error("CORS/NETWORK ERROR: Your Worker is either offline or blocking localhost. Ensure you handle the 'OPTIONS' method and return CORS headers.");
+      }
+      throw new Error(`Proxy Link Failed: ${err.message}`);
     }
   },
 
   generateGemini: async (model: string, system: string, prompt: string): Promise<string[]> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("Local API_KEY not found. Switch to 'Proxy Mode' in Settings.");
+    if (!apiKey) throw new Error("Local API_KEY not found. Use 'Proxy Mode' for localhost development.");
 
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
